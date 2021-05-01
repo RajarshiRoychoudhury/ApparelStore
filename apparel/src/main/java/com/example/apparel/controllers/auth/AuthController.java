@@ -1,7 +1,9 @@
 package com.example.apparel.controllers.auth;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import com.example.apparel.repository.CartRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +19,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,11 +29,17 @@ import com.example.apparel.api.request.LoginRequest;
 import com.example.apparel.api.request.SignupRequest;
 import com.example.apparel.api.response.JwtResponse;
 import com.example.apparel.api.response.MessageResponse;
+import com.example.apparel.model.Cart;
+import com.example.apparel.model.CartItemFull;
 import com.example.apparel.model.ERole;
+import com.example.apparel.model.Item;
+import com.example.apparel.model.ListSearchHistory;
 import com.example.apparel.model.Role;
 import com.example.apparel.model.User;
 import com.example.apparel.repository.RoleRepository;
+import com.example.apparel.repository.ItemRepository;
 import com.example.apparel.repository.UserRepository;
+import com.example.apparel.repository.ListSearchHistoryRepository;
 import com.example.apparel.security.jwt.JwtUtils;
 import com.example.apparel.security.services.AppUserDetails;
 
@@ -53,7 +60,17 @@ public class AuthController {
 	PasswordEncoder encoder;
 
 	@Autowired
+	CartRepository cartRepository;
+
+	@Autowired
 	JwtUtils jwtUtils;
+	
+	@Autowired
+	ItemRepository itemRepository;
+	
+	@Autowired
+	ListSearchHistoryRepository lshrepository;
+	
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
 
@@ -64,17 +81,25 @@ public class AuthController {
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		String jwt = jwtUtils.generateJwtToken(authentication);
-		
-		AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();		
+		System.out.println(cartRepository);
+		AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();	
 		List<String> roles = userDetails.getAuthorities().stream()
 				.map(item -> item.getAuthority())
 				.collect(Collectors.toList());
-
+		System.out.println(roles);
+		Cart cart = cartRepository.findByUserId(userDetails.getId()).get(0);
+		List<CartItemFull> cart_items = new ArrayList<>();
+		for(int i=0;i<cart.getCartItems().size();i++) {
+			Item item = itemRepository.findById(cart.getCartItems().get(i).getId()).get();
+			cart_items.add(new CartItemFull(item,cart.getCartItems().get(i).getQuantity()));
+		}
+		System.out.println("Hi");
 		return ResponseEntity.ok(new JwtResponse(jwt, 
 												 userDetails.getId(), 
 												 userDetails.getUsername(), 
 												 userDetails.getEmail(), 
-												 roles));
+												 roles,
+												 cart_items));
 	}
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@RequestBody SignupRequest signUpRequest) {
@@ -124,6 +149,10 @@ public class AuthController {
 
 		user.setRoles(roles);
 		userRepository.save(user);
+		Cart cart = new Cart(user.getId(),new ArrayList<>());
+		ListSearchHistory lsh = new ListSearchHistory(user.getId());
+		lshrepository.save(lsh);
+		cartRepository.save(cart);
 
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 	}

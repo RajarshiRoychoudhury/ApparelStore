@@ -4,18 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.example.apparel.repository.ItemRepository;
 
-public class UpdateCart {
-	
-	@Autowired
-	ItemRepository repository;
-	
-	private String id;
+public class CartItemFull {
+	private Item item;
 	private Integer quantity;
-	public String getId() {
-		return id;
+	public Item getItem() {
+		return item;
 	}
-	public void setId(String id) {
-		this.id = id;
+	public void setItem(Item item) {
+		this.item = item;
 	}
 	public Integer getQuantity() {
 		return quantity;
@@ -23,16 +19,14 @@ public class UpdateCart {
 	public void setQuantity(Integer quantity) {
 		this.quantity = quantity;
 	}
-	public UpdateCart(String id, Integer quantity) {
-		super();
-		this.id = id;
-		this.quantity = quantity;
-	}
 	@Override
 	public String toString() {
-		return "UpdateCart [id=" + id + ", quantity=" + quantity + "]";
+		return "CartItemFull [item=" + item + ", quantity=" + quantity + "]";
 	}
-	
-
+	public CartItemFull(Item item, Integer quantity) {
+		super();
+		this.item = item;
+		this.quantity = quantity;
+	}
 
 }

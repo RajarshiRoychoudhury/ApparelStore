@@ -3,7 +3,7 @@ package com.example.apparel.model;
 import java.util.*;
 
 public class PQueue {
-	 private PriorityQueue queue;
+	 private PriorityQueue<SearchHistory> queue;
 	 private SearchHistoryComparator comparator;
 	 public PQueue(List<SearchHistory> history){
 		 comparator = new SearchHistoryComparator();

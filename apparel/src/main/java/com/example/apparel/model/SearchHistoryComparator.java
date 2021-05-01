@@ -4,7 +4,7 @@ public class SearchHistoryComparator implements java.util.Comparator<SearchHisto
 
 	@Override
 	public int compare(SearchHistory o1, SearchHistory o2) {
-		return o1.getTimes().compareTo(o2.getTimes());
+		return o2.getTimes()-(o1.getTimes());
 	}
 
 }

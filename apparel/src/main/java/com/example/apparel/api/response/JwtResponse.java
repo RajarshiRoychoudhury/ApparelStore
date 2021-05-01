@@ -2,21 +2,40 @@ package com.example.apparel.api.response;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.example.apparel.model.Cart;
+import com.example.apparel.model.CartItemFull;
+import com.example.apparel.repository.CartRepository;
+
 public class JwtResponse {
 	private String token;
 	private String type = "Bearer";
 	private String id;
 	private String username;
 	private String email;
+	private List<CartItemFull> items;
 	private List<String> roles;
 
-	public JwtResponse(String accessToken, String id, String username, String email, List<String> roles) {
+	public JwtResponse(String accessToken, String id, String username, String email, List<String> roles, List<CartItemFull> items) {
 		this.token = accessToken;
 		this.id = id;
 		this.username = username;
 		this.email = email;
 		this.roles = roles;
+		this.items = items;
 	}
+
+
+	public List<CartItemFull> getItems() {
+		return items;
+	}
+
+
+	public void setItems(List<CartItemFull> items) {
+		this.items = items;
+	}
+
 
 	public String getAccessToken() {
 		return token;

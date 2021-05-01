@@ -20,10 +20,14 @@ import java.util.*;
 import com.example.apparel.api.response.MessageResponse;
 import com.example.apparel.model.HomePage;
 import com.example.apparel.model.Item;
+import com.example.apparel.model.ListSearchHistory;
 import com.example.apparel.model.PQueue;
 import com.example.apparel.model.SearchHistory;
-import com.example.apparel.model.UpdateCart;
+import com.example.apparel.model.Cart;
+import com.example.apparel.model.CartItem;
+import com.example.apparel.repository.CartRepository;
 import com.example.apparel.repository.ItemRepository;
+import com.example.apparel.repository.ListSearchHistoryRepository;
 import com.example.apparel.security.services.AppUserDetails;
 
 
@@ -40,6 +44,11 @@ public class UserControllerCustom {
 	@Autowired
 	ItemRepository itemRepository;
 	
+	@Autowired
+	CartRepository cartRepository;
+	
+	@Autowired
+	ListSearchHistoryRepository lshrepository;
 //	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 	@GetMapping("/home")
 	public ResponseEntity<?> getHomePage(HttpServletRequest req) {
@@ -51,10 +60,8 @@ public class UserControllerCustom {
 	
 	
 	public Item[] newArrivals(HttpServletRequest req){
-		HttpSession session = req.getSession();
-		System.out.println(session);
-		if(session.isNew()) {
-			try {
+
+		try {
 					AppUserDetails userdetails = (AppUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 					Item[] itemlist= itemRepository.findAll().
 					stream().
@@ -76,58 +83,11 @@ public class UserControllerCustom {
 				System.out.println(e);
 				return itemlist;
 			}
+
 		}
-		else {
-			try {
-				AppUserDetails userdetails = (AppUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-				Item[] itemlist= itemRepository.findAll().
-				stream().
-				filter(item -> item.getCategory().equals(userdetails.getGender()))
-				.filter(item-> item.getDate().before(new Date()))
-				.filter(item->item.getStock() >0)
-				.limit(20)
-				.toArray(Item[]::new);
-				return itemlist;
-		}
-		catch(Exception e) {
-			Item[] itemlist= itemRepository.findAll().
-			stream().
-			filter(item -> item.getGender().equals("F"))
-			.filter(item->item.getStock() >0)
-			.limit(20)
-			.toArray(Item[]::new);
-			System.out.println(e);
-			return itemlist;
-		}
-		}
-	}
 
 	public Item[] discounted(HttpServletRequest req){
-		if(req.getSession().isNew()) {
-			try {
-					AppUserDetails userdetails = (AppUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-					Item[] itemlist= itemRepository.findAll().
-					stream().
-					filter(item -> item.getGender().equals(userdetails.getGender()))
-					.filter(item->item.getStock() >0)
-					.filter(item-> item.getHasDiscount())
-					.limit(20)
-					.toArray(Item[]::new);
-					return itemlist;
-			}
-			catch(Exception e) {
-				System.out.println(e);
-				Item[] itemlist= itemRepository.findAll().
-				stream().
-				filter(item -> item.getGender().equals("F"))
-				.filter(item-> item.getHasDiscount())
-				.filter(item->item.getStock() >0)
-				.limit(20)
-				.toArray(Item[]::new);
-				return itemlist;
-			}
-		}
-		else {
+
 			try {
 					AppUserDetails userdetails = (AppUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 					Item[] itemlist= itemRepository.findAll().
@@ -150,35 +110,25 @@ public class UserControllerCustom {
 				.toArray(Item[]::new);
 				return itemlist;
 			}
-		}
 		//return new Item[0];
 	}
 	
 	public Item[] based(HttpServletRequest req){
-		HttpSession session = req.getSession();
-		if(session.isNew()) {
-			System.out.println("New session");
-			return new Item[0];
-		}
-		else {
-			System.out.println("Exisiting session");
+
 			try {
 					AppUserDetails userdetails = (AppUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 					List<String> items = Arrays.asList("Shoe","Top","Skirt","Pant","Shirt","Tshirt");
-					List<SearchHistory> history = new ArrayList<SearchHistory>();
-					for(int i=0;i<items.size();i++) {
-						if(session.getAttribute(items.get(i))!=null) {
-								SearchHistory sh = new SearchHistory(items.get(i),(Integer)session.getAttribute(items.get(i)));
-								history.add(sh);
-							}
-						}
+					
+					List<SearchHistory> history = lshrepository.findByUserId(userdetails.getId()).get(0).getHistory();
 					System.out.println("History is");
 					System.out.println(history);
 					PQueue queue = new PQueue(history);
 					List<SearchHistory> topThree = queue.getTopThree();
+					System.out.println("Now top 3 is:");
+					System.out.println(topThree);
 					Item[] itemlist= itemRepository.findAll().
 					stream().
-					filter(item -> this.belongsTo(history, item))
+					filter(item -> this.belongsTo(topThree, item))
 					.filter(item->item.getStock() >0)
 					.limit(20)
 					.toArray(Item[]::new);
@@ -196,25 +146,29 @@ public class UserControllerCustom {
 				System.out.println("Exception encountered");
 				return new Item[0];
 			}
-		}
 	}
 	
 	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 	@PostMapping("/addcart")
-	public ResponseEntity<?> addToCart(@RequestBody UpdateCart iq,HttpServletRequest req){
+	public ResponseEntity<?> addToCart(@RequestBody CartItem iq,HttpServletRequest req){
 		try {
-			
+			AppUserDetails userdetails = (AppUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();	
 		Item item = itemRepository.findById(iq.getId()).get();
-		HttpSession session = req.getSession();
-		if(session.isNew()) {
-			//"Shoe","Top","Skirt","Pant","Shirt","Tshirt"
-			List<String> items = Arrays.asList("Shoe","Top","Skirt","Pant","Shirt","Tshirt");
-			for(int i=0;i<items.size();i++) {
-				session.setAttribute(items.get(i), 0);
+		Cart cart = cartRepository.findByUserId(userdetails.getId()).get(0);
+		System.out.println(cart);
+		cart.addItem(iq);
+		cartRepository.save(cart);
+		ListSearchHistory lsh = lshrepository.findByUserId(userdetails.getId()).get(0);
+		System.out.println("inside add to cart");
+		List<String> itemCategory = Arrays.asList("Shoe","Top","Skirt","Pant","Shirt","Tshirt");
+		for(int i=0;i<itemCategory.size();i++) {
+			if(item.getCategory().equals(itemCategory.get(i))) {
+				lsh.getHistory().get(i).setTimes(lsh.getHistory().get(i).getTimes()+1);
+				lshrepository.save(lsh);
+				break;
 			}
 		}
 		String type = item.getCategory();
-		session.setAttribute(type, (Integer)session.getAttribute(type)+1);
 		System.out.println("Quantity:"+iq.getQuantity());
 		if(item.getStock()<iq.getQuantity()) {
 			System.out.println("Out of stock");
@@ -244,11 +198,26 @@ public class UserControllerCustom {
 	
 	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 	@PostMapping("/removeItem")
-	public ResponseEntity<?> removeCategory(@RequestBody HashMap<String,String> updateItem){
-		System.out.println(updateItem);
-		Item item = itemRepository.findById(updateItem.get("id")).get();
-		item.setStock(item.getStock()+Integer.parseInt(updateItem.get("quantity")));
+	public ResponseEntity<?> removeCategory(@RequestBody CartItem updatedItem){
+		System.out.println(updatedItem);
+		Item item = itemRepository.findById(updatedItem.getId()).get();
+		item.setStock(item.getStock()+updatedItem.getQuantity());
+		AppUserDetails userdetails = (AppUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		ListSearchHistory lsh = lshrepository.findByUserId(userdetails.getId()).get(0);
+		List<String> itemCategory = Arrays.asList("Shoe","Top","Skirt","Pant","Shirt","Tshirt");
+		for(int i=0;i<itemCategory.size();i++) {
+			if(item.getCategory().equals(itemCategory.get(i))) {
+				lsh.getHistory().get(i).setTimes(lsh.getHistory().get(i).getTimes()+1);
+				lshrepository.save(lsh);
+				break;
+			}
+		}
 		itemRepository.save(item);
+		System.out.println("Hi");
+		Cart cart = cartRepository.findByUserId(userdetails.getId()).get(0);
+		System.out.println(cart);
+		cart.removeItem(updatedItem);
+		cartRepository.save(cart);
 		System.out.println(item);
 		return ResponseEntity.ok("Updated");
 	}
@@ -257,6 +226,21 @@ public class UserControllerCustom {
 	public ResponseEntity<List<Item>> getCategory(@RequestBody HashMap<String,String> category){
 		System.out.println(category);
 		List<Item> items= itemRepository.findByCategory(category.get("category"));
+		try {
+			AppUserDetails userdetails = (AppUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+			ListSearchHistory lsh = lshrepository.findByUserId(userdetails.getId()).get(0);
+			List<String> itemCategory = Arrays.asList("Shoe","Top","Skirt","Pant","Shirt","Tshirt");
+			for(int i=0;i<itemCategory.size();i++) {
+				if(category.get("category").equals(itemCategory.get(i))) {
+					System.out.println("Found");
+					lsh.getHistory().get(i).setTimes(lsh.getHistory().get(i).getTimes()+1);
+					lshrepository.save(lsh);
+					break;
+				}
+			}
+			
+		}
+		catch(Exception e) {}
 		return ResponseEntity.ok(items);
 	}
 	
