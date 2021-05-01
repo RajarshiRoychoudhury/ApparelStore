@@ -1,4 +1,4 @@
-package com.example.apparel.api;
+package com.example.apparel.api.response;
 
 public class MessageResponse {
 	private String message;

@@ -1,4 +1,4 @@
-package com.example.apparel.api;
+package com.example.apparel.api.request;
 
 
 public class LoginRequest {
@@ -17,6 +17,11 @@ public class LoginRequest {
 
 	public String getPassword() {
 		return password;
+	}
+
+	@Override
+	public String toString() {
+		return "LoginRequest [username=" + username + ", password=" + password + "]";
 	}
 
 	public void setPassword(String password) {

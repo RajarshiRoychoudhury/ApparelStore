@@ -1,28 +1,33 @@
-package com.example.apparel.controllers;
+package com.example.apparel.controllers.auth;
 
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.apparel.api.JwtResponse;
-import com.example.apparel.api.LoginRequest;
-import com.example.apparel.api.MessageResponse;
-import com.example.apparel.api.SignupRequest;
+import com.example.apparel.api.request.LoginRequest;
+import com.example.apparel.api.request.SignupRequest;
+import com.example.apparel.api.response.JwtResponse;
+import com.example.apparel.api.response.MessageResponse;
 import com.example.apparel.model.ERole;
 import com.example.apparel.model.Role;
 import com.example.apparel.model.User;
@@ -52,7 +57,9 @@ public class AuthController {
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
 
+		System.out.println(loginRequest);
 		Authentication authentication = authenticationManager.authenticate(
+
 				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -78,7 +85,6 @@ public class AuthController {
 					.badRequest()
 					.body(new MessageResponse("Error: Email is already in use!"));
 		}
-		//String firstname, String lastname, String gender, String email, String password, Set<Role> roles
 		// Create new user's account
 		User user = new User(signUpRequest.getFirstname(), 
 							 signUpRequest.getLastname(),
@@ -121,4 +127,17 @@ public class AuthController {
 
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 	}
+	
+	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+	@GetMapping("/logout")
+	public ResponseEntity<?>logout (HttpServletRequest req){
+		List<String> items = Arrays.asList("Shoe","Top","Skirt","Pant","Shirt","Tshirt");
+		for(int i=0;i<items.size();i++) {
+			req.getSession().removeAttribute(items.get(i));
+			
+		}
+		req.getSession().invalidate();
+		return ResponseEntity.ok(new MessageResponse("Successfully logged out"));
+	}
+	
 }
