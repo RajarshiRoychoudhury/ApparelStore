@@ -1,0 +1,114 @@
+body {font-family: Arial, Helvetica, sans-serif;}
+form {border: 3px solid #f1f1f1;}
+
+/* div {
+  width: 50%;
+  height:50%;
+  border: 1px solid #c92626;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  background-color:chocolate;
+} */
+
+.label 
+{
+  text-align: center;
+  text-emphasis-color: white;
+}
+
+.container input[type=text], input[type=password] 
+{
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  /* border: 1px solid #ccc; */
+  box-sizing: border-box;
+}
+
+.container button {
+  color: rgb(252, 252, 252) !important;
+  text-transform: uppercase;
+  text-decoration:dashed;
+  background: #2979FF;
+  padding: 20px;
+  border-radius: 5px;
+  display: inline-block;
+  border: none;
+  width: 100%;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+.container.cancelbtn {
+  width: auto;
+  padding: 10px 18px;
+  background-color: #f44336;
+}
+
+.imgcontainer {
+  text-align: center;
+  margin: 24px 0 12px 0;
+}
+
+img.avatar {
+  width: 40%;
+  border-radius: 50%;
+}
+
+.container{
+  /* width: 50%;
+  height:50%; */
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-self: center;
+  padding: 16px;
+  height: 90vh;
+  width: 100vw;
+}
+
+
+span.psw {
+  float: right;
+  padding-top: 16px;
+}
+button:focus {
+  outline: 0;
+}
+
+.topnav_signup {
+  /* padding: 16px 16px; */
+  width:100%;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+
+.rover_signup {
+  float: left;
+  background-color:black;
+  color: white;
+  text-align: center;
+  padding: 15px 15px;
+  text-decoration: none;
+  font-size: 17px;
+  width: 100%;
+}
+
+
+.rover_signup:hover {
+  background-color: #ddd;
+  color: black;
+  width: 100%;
+}
+
+
+.rover_signup.active {
+  background-color: #4CAF50;
+  color: white;
+  width: 100%;
+}

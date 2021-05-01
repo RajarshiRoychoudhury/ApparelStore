@@ -1,0 +1,16 @@
+.hide {
+    display: none;
+    position: relative;
+    text-align: center;
+    text-transform: capitalize;
+    border-radius:0ex;
+    border-color: blue;
+  }
+      
+  .myDIV:hover + .hide {
+    display: block;
+    background: greenyellow;
+    position: relative;
+    transform : translate(-50% , + 50%);
+    transition: 2s  ;
+  }
